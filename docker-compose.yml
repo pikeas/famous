@@ -1,0 +1,42 @@
+cassandra:
+    image: mashape/cassandra:latest
+    expose:
+        -   "9042"
+
+api:
+    image: mashape/kong:0.3.1
+    ports:
+        -   "80:8000"
+        -   "8001:8001"
+    links:
+        -   cassandra
+        -   reader
+        -   writer
+
+redis:
+    image: redis:3.0.2
+    command: redis-server --appendonly yes
+
+reader:
+    build: reader
+    ports:
+        -   "5000"
+    links:
+        -   redis
+    volumes:
+        -   reader:/app
+    environment:
+        FLASK_DEBUG: True
+        DB_HOST: redis
+
+writer:
+    build: writer
+    ports:
+        -   "5001"
+    links:
+        -   redis
+    volumes:
+        -   writer:/app
+    environment:
+        DB_HOST: redis
+        QUEUE_KEY:

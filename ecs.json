@@ -1,0 +1,117 @@
+{
+  "family": "Aris-Famous",
+  "containerDefinitions": [
+    {
+      "name": "api",
+      "image": "mashape/kong:0.3.1",
+      "cpu": "10",
+      "memory": "500",
+      "entryPoint": [],
+      "environment": [],
+      "command": [],
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 8000
+        },
+        {
+          "hostPort": 8001,
+          "containerPort": 8001
+        }
+      ],
+      "volumesFrom": [],
+      "links": [
+        "cassandra",
+        "reader",
+        "writer"
+      ],
+      "mountPoints": [],
+      "essential": true
+    },
+    {
+      "name": "writer",
+      "image": "aris/famous-writer:latest",
+      "cpu": "10",
+      "memory": "500",
+      "entryPoint": [],
+      "environment": [
+        {
+          "name": "DB_HOST",
+          "value": "redis"
+        }
+      ],
+      "command": [],
+      "portMappings": [
+        {
+          "hostPort": 5001,
+          "containerPort": 5001
+        }
+      ],
+      "volumesFrom": [],
+      "links": [
+        "redis"
+      ],
+      "mountPoints": [],
+      "essential": true
+    },
+    {
+      "name": "redis",
+      "image": "redis:3.0.2",
+      "cpu": "10",
+      "memory": "500",
+      "entryPoint": [],
+      "environment": [],
+      "command": [
+        "redis-server",
+        "--appendonly",
+        "yes"
+      ],
+      "portMappings": [],
+      "volumesFrom": [],
+      "links": [],
+      "mountPoints": [],
+      "essential": true
+    },
+    {
+      "name": "cassandra",
+      "image": "mashape/cassandra:latest",
+      "cpu": "10",
+      "memory": "500",
+      "entryPoint": [],
+      "environment": [],
+      "command": [],
+      "portMappings": [],
+      "volumesFrom": [],
+      "links": [],
+      "mountPoints": [],
+      "essential": true
+    },
+    {
+      "name": "reader",
+      "image": "aris/famous-reader",
+      "cpu": "10",
+      "memory": "500",
+      "entryPoint": [],
+      "environment": [
+        {
+          "name": "DB_HOST",
+          "value": "redis"
+        }
+      ],
+      "command": [],
+      "portMappings": [
+        {
+          "hostPort": 5000,
+          "containerPort": 5000
+        }
+      ],
+      "volumesFrom": [],
+      "links": [
+        "redis"
+      ],
+      "mountPoints": [],
+      "essential": true
+    }
+  ],
+  "volumes": []
+}

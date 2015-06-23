@@ -1,0 +1,30 @@
+Hi Mei, Austin, and "Docker challenge" reviewers,
+
+
+This is my take on the containerized reader/writer challenge. I've implemented this as the following set of containers:
+
+1) Redis: data store for the reader and router.
+2) Reader: Python/Flask application.
+3) Writer: Coffeescript/Express+Node.
+4) Cassandra: data store for the API.
+4) API: Router for the reader and writer. This uses Kong, which is a modified version of Nginx. Gives us the ability to easily add caching, authentication, rate-limiting, SSL termination, etc to the API.
+
+My reader and writer images inherit from my personal python3 and iojs images, respectively. I've included the base Dockerfiles in /images for reference. The reader application uses a Python package called "arisutils", which is a small utility library I packaged a few weeks ago to reduce boilerplate around correctly and robustly parsing environment variables into an application.
+
+For local development, I've used docker-compose. I have a personal Vagrantfile I use instead of boot2docker, which I've also included. To bring this up yourself, a few extra commands are necessary:
+
+1) To add the API routes (assuming dock.dev is in /etc/hosts pointing to your Docker VM):
+    curl -H "Content-Type: application/json" -X POST -d '{"name":"reader","target_url":"http://reader:5000","path":"/read"}' dock.dev:8001/apis
+    curl -H "Content-Type: application/json" -X POST -d '{"name":"writer","target_url":"http://writer:5001","path":"/write"}' dock.dev:8001/apis
+
+2) docker-compose treats a container as up immediately on launch. Cassandra takes a while to startup, which causes Kong to fail to connect. As a workaround, instead of `docker-compose up -d && docker-compose logs`, substitute: `docker-compose up -d && sleep 10 && docker-compose start api && docker-compose logs`
+
+
+For deployment on AWS, I've used Amazon's EC2 Container Service (ECS). The ECS task definition is included.
+
+
+Regarding edge cases and errors, the reader handles the case where a read is requested when no data is present, and the writer handles the case where no text is sent as well as the case where Redis throws an error. The primary failure mode for the architecture mode is that each container is a SPOF (Single Point of Failure). This can be mitigated by expanding each container to a full service tier, for example multi-node Redis/Cassandra, multiple reader/writer nodes behind Kong, or multiple Kong nodes behind a load balancer.
+
+The service is available at http://54.172.183.193/write and http://54.172.183.193/read
+
+-Aris
